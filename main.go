@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"io"
-	"bufio"
+
+	"github.com/yuichi1004/telnet-chat/chat/standalone"
 )
 
 const (
@@ -15,6 +15,8 @@ const (
 )
 
 func main() {
+	c := standalone.NewChat()
+
 	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
@@ -29,25 +31,8 @@ func main() {
 			fmt.Println("Error accepting: ", err.Error())
 			os.Exit(1)
 		}
-		go handleRequest(conn)
+		h := NewChatHandler(c, conn)
+		go h.doHandle()
 	}
 }
 
-func handleRequest(conn net.Conn) {
-	defer conn.Close()
-
-	reader := bufio.NewReader(conn)
-	for {
-		buf, _, err := reader.ReadLine()
-		switch err {
-		case nil:
-		case io.EOF:
-			fmt.Println("Connection closed")
-			return
-		default:
-			fmt.Println("Error reading:", err.Error())
-			return
-		}
-		conn.Write([]byte(fmt.Sprintf("echo: %s\n", buf)))
-	}
-}
