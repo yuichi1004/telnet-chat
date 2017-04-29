@@ -129,9 +129,13 @@ func (c *ChatHandler) join(room string) error {
 		return fmt.Errorf("your are already on %s. /leave the room first", room)
 	}
 
-	_, err := c.chat.GetRoom(room)
+	r, err := c.chat.GetRoom(room)
 	if err != nil {
 		c.chat.NewRoom(room)
+		r, err = c.chat.GetRoom(room)
+		if err != nil {
+			return fmt.Errorf("failed to create new room")
+		}
 	}
 	c.participant, err = c.chat.Join(room, c.name)
 	if err != nil {
@@ -143,6 +147,10 @@ func (c *ChatHandler) join(room string) error {
 	}
 
 	c.printf("entering room: %s\n", room)
+	for _, p := range(r.Participants) {
+		c.printf(" * %s\n", p.Name())
+	}
+	c.printf("end of list\n")
 
 	return nil
 }

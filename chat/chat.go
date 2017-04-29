@@ -2,7 +2,7 @@ package chat
 
 type Room struct {
 	Name string
-	Participants []string
+	Participants map[string] Participant
 }
 
 type Chat interface {
@@ -35,4 +35,7 @@ type Participant interface {
 
 	// Leave the chat room
 	Leave() error
+
+	// Get name of participant
+	Name() string
 }

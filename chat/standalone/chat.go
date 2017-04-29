@@ -38,7 +38,7 @@ func (c *Chat) NewRoom(name string) error {
 	c.rooms[name] = &Room{
 		chat.Room{
 			Name: name, 
-			Participants: make([]string, 0),
+			Participants: make(map[string]chat.Participant, 0),
 		},
 		NewPubSub(),
 	}
@@ -49,7 +49,7 @@ func (c *Chat) GetRooms() ([]string, error) {
 	names := make([]string, len(c.rooms))
 	i := 0
 	for _, r := range(c.rooms) {
-		names[0] = r.Name
+		names[i] = r.Name
 		i = i + 1
 	}
 	return names, nil
@@ -73,6 +73,7 @@ func (c *Chat) Join(room, user string) (chat.Participant, error) {
 		name: user,
 		room: r,
 	}
+	r.Participants[user] = p
 	return p, nil
 }
 
@@ -107,6 +108,10 @@ func (p *ChatParticipant) Subscribe()(chan string, error) {
 
 func (p *ChatParticipant) Leave() error {
 	p.closer()
+	delete(p.room.Participants, p.name)
 	return nil
 }
 
+func (p *ChatParticipant) Name() string {
+	return p.name
+}
