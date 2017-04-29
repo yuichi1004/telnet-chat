@@ -13,6 +13,7 @@ type Room struct {
 
 type Chat struct {
 	rooms map[string] *Room
+	users map[string] bool
 }
 
 type ChatParticipant struct {
@@ -25,6 +26,7 @@ type ChatParticipant struct {
 func NewChat() *Chat {
 	return &Chat{
 		rooms: make(map[string] *Room),
+		users: make(map[string] bool),
 	}
 }
 
@@ -72,6 +74,21 @@ func (c *Chat) Join(room, user string) (chat.Participant, error) {
 		room: r,
 	}
 	return p, nil
+}
+
+func (c *Chat) Connect(user string) error {
+	if _, ok := c.users[user]; ok {
+		return fmt.Errorf("user %s already exists", user)
+	}
+	c.users[user] = true
+	return nil
+}
+
+func (c *Chat) Disconnect(user string) error {
+	if _, ok := c.users[user]; ok {
+		delete(c.users, user)
+	}
+	return nil
 }
 
 func (p *ChatParticipant) Send(message string) error {
