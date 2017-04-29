@@ -38,4 +38,7 @@ type Participant interface {
 
 	// Get name of participant
 	Name() string
+
+	// Get room name
+	Room() string
 }

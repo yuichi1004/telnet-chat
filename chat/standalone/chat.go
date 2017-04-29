@@ -115,3 +115,7 @@ func (p *ChatParticipant) Leave() error {
 func (p *ChatParticipant) Name() string {
 	return p.name
 }
+
+func (p *ChatParticipant) Room() string {
+	return p.room.Name
+}
