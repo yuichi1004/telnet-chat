@@ -34,6 +34,11 @@ func NewChatHandler(chat chat.Chat, writer io.ReadWriteCloser) *ChatHandler {
 }
 
 func (c *ChatHandler) doHandle() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("recover on doHandle()")
+		}
+	}()
 	defer c.writer.Close()
 
 	line := make(chan string)
@@ -70,6 +75,12 @@ func (c *ChatHandler) doHandle() {
 }
 
 func (c *ChatHandler) HandleLine(line string) error {
+	defer func() {
+		if r := recover(); r != nil {
+			c.quit()
+		}
+	}()
+
 	if c.name == "" {
 		if err := c.chat.Connect(line); err != nil {
 			c.printf("Sorry, name taken.\nLogin name?\n")
