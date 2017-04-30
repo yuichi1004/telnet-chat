@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	CONN_HOST = "localhost"
 	CONN_PORT = "9399"
 	CONN_TYPE = "tcp"
 )
@@ -17,14 +16,20 @@ const (
 func main() {
 	c := standalone.NewChat()
 
-	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
+	host := os.Getenv("CHAT_HOST")
+	port := os.Getenv("CHAT_PORT")
+	if port == "" {
+		port = CONN_PORT
+	}
+
+	l, err := net.Listen(CONN_TYPE, host+":"+port)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	defer l.Close()
 
-	fmt.Println("Listening on " + CONN_HOST + ":" + CONN_PORT)
+	fmt.Println("Listening on " + host + ":" + port)
 	for {
 		conn, err := l.Accept()
 		if err != nil {
