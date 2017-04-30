@@ -96,14 +96,13 @@ func (p *ChatParticipant) Send(message string) error {
 	return p.room.pubsub.Publish(message)
 }
 
-func (p *ChatParticipant) Subscribe()(chan string, error) {
-	ch := make(chan string, 10)
+func (p *ChatParticipant) Subscribe(ch chan string)(error) {
 	var err error
 	p.closer, err = p.room.pubsub.Subscribe(ch)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return ch, nil
+	return nil
 }
 
 func (p *ChatParticipant) Leave() error {

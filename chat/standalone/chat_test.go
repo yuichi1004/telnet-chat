@@ -28,8 +28,10 @@ func TestChat(t *testing.T) {
 		t.Errorf("failed to join the room (err:%v)", err)
 	}
 
-	ch1, _ := p1.Subscribe()
-	ch2, _ := p2.Subscribe()
+	ch1 := make(chan string, 10)
+	ch2 := make(chan string, 10)
+	p1.Subscribe(ch1)
+	p2.Subscribe(ch2)
 
 	check := func(expects string, ch chan string) error {
 		select {
@@ -43,7 +45,7 @@ func TestChat(t *testing.T) {
 		}
 	}
 
-	p1.Send("hello")
+	p1.Send("john: hello")
 	if err := check("john: hello", ch1); err != nil {
 		t.Errorf("%v", err)
 	}
@@ -51,7 +53,7 @@ func TestChat(t *testing.T) {
 		t.Errorf("%v", err)
 	}
 
-	p2.Send("hello")
+	p2.Send("mike: hello")
 	if err := check("mike: hello", ch1); err != nil {
 		t.Errorf("%v", err)
 	}
@@ -61,7 +63,7 @@ func TestChat(t *testing.T) {
 
 	p1.Leave()
 
-	p2.Send("hello")
+	p2.Send("mike: hello")
 	if err := check("mike: hello", ch1); err == nil {
 		t.Errorf("expected to be failed to get message but not")
 	}

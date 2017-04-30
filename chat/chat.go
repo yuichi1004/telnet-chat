@@ -31,7 +31,7 @@ type Participant interface {
 	Send(message string) error
 
 	// Subscribe messages on the chat room
-	Subscribe() (ch chan string, err error)
+	Subscribe(ch chan string) error
 
 	// Leave the chat room
 	Leave() error

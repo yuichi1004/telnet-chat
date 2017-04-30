@@ -15,7 +15,7 @@ type ChatHandler struct {
 	chat chat.Chat
 	participant chat.Participant
 	writer io.ReadWriteCloser
-	subscriber chan string
+	out chan string
 
 	name string
 	connected bool
@@ -25,7 +25,7 @@ func NewChatHandler(chat chat.Chat, writer io.ReadWriteCloser) *ChatHandler {
 	c:=  &ChatHandler {
 		chat: chat,
 		writer: writer,
-		subscriber: make(chan string),
+		out: make(chan string, 5),
 		connected: true,
 	}
 	c.printf("Welcome to the XYZ chat server\n")
@@ -62,7 +62,7 @@ func (c *ChatHandler) doHandle() {
 
 	for c.connected {
 		select {
-		case msg:=<-c.subscriber:
+		case msg:=<-c.out:
 			if strings.HasSuffix(msg, c.name) && strings.HasPrefix(msg, " *") {
 				c.printf("%s (** this is you)\n", msg)
 			} else {
@@ -166,7 +166,7 @@ func (c *ChatHandler) join(room string) error {
 	if err != nil {
 		return fmt.Errorf("failed to subscribe the room")
 	}
-	c.subscriber, err = c.participant.Subscribe()
+	err = c.participant.Subscribe(c.out)
 	if err != nil {
 		return fmt.Errorf("failed to subscribe the room")
 	}
