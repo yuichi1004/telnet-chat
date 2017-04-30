@@ -92,11 +92,11 @@ func (c *Chat) Disconnect(user string) error {
 	return nil
 }
 
-func (p *ChatParticipant) Send(message string) error {
+func (p *ChatParticipant) Send(message chat.Message) error {
 	return p.room.pubsub.Publish(message)
 }
 
-func (p *ChatParticipant) Subscribe(ch chan string)(error) {
+func (p *ChatParticipant) Subscribe(ch chan chat.Message)(error) {
 	var err error
 	p.closer, err = p.room.pubsub.Subscribe(ch)
 	if err != nil {

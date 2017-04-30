@@ -13,30 +13,30 @@ func TestChat(t *testing.T) {
 	user1 := "john"
 	user2 := "mike"
 
-	chat := NewChat()
-	err := chat.NewRoom(room)
+	chatInstance := NewChat()
+	err := chatInstance.NewRoom(room)
 	if err != nil {
 		t.Errorf("failed to create room (err:%v)", err)
 	}
 
-	p1, err := chat.Join(room, user1)
+	p1, err := chatInstance.Join(room, user1)
 	if err != nil {
 		t.Errorf("failed to join the room (err:%v)", err)
 	}
-	p2, err := chat.Join(room, user2)
+	p2, err := chatInstance.Join(room, user2)
 	if err != nil {
 		t.Errorf("failed to join the room (err:%v)", err)
 	}
 
-	ch1 := make(chan string, 10)
-	ch2 := make(chan string, 10)
+	ch1 := make(chan chat.Message, 10)
+	ch2 := make(chan chat.Message, 10)
 	p1.Subscribe(ch1)
 	p2.Subscribe(ch2)
 
-	check := func(expects string, ch chan string) error {
+	check := func(expects chat.Message, ch chan chat.Message) error {
 		select {
 		case got:= <-ch:
-			if got != expects {
+			if !reflect.DeepEqual(got, expects) {
 				return fmt.Errorf("unexpected message (expects:%s, got:%s)", expects, got)
 			}
 			return nil
@@ -45,29 +45,31 @@ func TestChat(t *testing.T) {
 		}
 	}
 
-	p1.Send("john: hello")
-	if err := check("john: hello", ch1); err != nil {
+	msg1 := chat.TextMessage{"john", "hello"}
+	p1.Send(msg1)
+	if err := check(msg1, ch1); err != nil {
 		t.Errorf("%v", err)
 	}
-	if err := check("john: hello", ch2); err != nil {
+	if err := check(msg1, ch2); err != nil {
 		t.Errorf("%v", err)
 	}
 
-	p2.Send("mike: hello")
-	if err := check("mike: hello", ch1); err != nil {
+	msg2 := chat.TextMessage{"mike", "hello"}
+	p2.Send(msg2)
+	if err := check(msg2, ch1); err != nil {
 		t.Errorf("%v", err)
 	}
-	if err := check("mike: hello", ch2); err != nil {
+	if err := check(msg2, ch2); err != nil {
 		t.Errorf("%v", err)
 	}
 
 	p1.Leave()
 
-	p2.Send("mike: hello")
-	if err := check("mike: hello", ch1); err == nil {
+	p2.Send(msg2)
+	if err := check(msg2, ch1); err == nil {
 		t.Errorf("expected to be failed to get message but not")
 	}
-	if err := check("mike: hello", ch2); err != nil {
+	if err := check(msg2, ch2); err != nil {
 		t.Errorf("%v", err)
 	}
 }

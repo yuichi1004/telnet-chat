@@ -15,17 +15,17 @@ type ChatHandler struct {
 	chat chat.Chat
 	participant chat.Participant
 	writer io.ReadWriteCloser
-	out chan string
+	out chan chat.Message
 
 	name string
 	connected bool
 }
 
-func NewChatHandler(chat chat.Chat, writer io.ReadWriteCloser) *ChatHandler {
+func NewChatHandler(chatInstance chat.Chat, writer io.ReadWriteCloser) *ChatHandler {
 	c:=  &ChatHandler {
-		chat: chat,
+		chat: chatInstance,
 		writer: writer,
-		out: make(chan string, 5),
+		out: make(chan chat.Message, 5),
 		connected: true,
 	}
 	c.printf("Welcome to the XYZ chat server\n")
@@ -63,11 +63,7 @@ func (c *ChatHandler) doHandle() {
 	for c.connected {
 		select {
 		case msg:=<-c.out:
-			if strings.HasSuffix(msg, c.name) && strings.HasPrefix(msg, " *") {
-				c.printf("%s (** this is you)\n", msg)
-			} else {
-				c.printf("%s\n", msg)
-			}
+			c.printf(msg.String(c.name))
 		case msg:=<-line:
 			c.HandleLine(msg)
 		}
@@ -131,7 +127,7 @@ func (c *ChatHandler) send(msg string) error {
 	if c.participant == nil {
 		return fmt.Errorf("you need to join the room first")
 	}
-	text := fmt.Sprintf("%s: %s", c.name, msg)
+	text := chat.TextMessage{From:c.name, Text: msg}
 	return c.participant.Send(text)
 }
 
@@ -181,14 +177,22 @@ func (c *ChatHandler) join(room string) error {
 	}
 	c.printf("end of list\n")
 
-	msg := fmt.Sprintf(" * new user joined  %s: %s", c.participant.Room(), c.name)
+	msg := chat.SystemMessage {
+		Message: fmt.Sprintf(" * new user joined  %s: %s", c.participant.Room(), c.name),
+		Subject: c.name,
+		HideIfYou: true,
+	}
 	c.participant.Send(msg)
 
 	return nil
 }
 
 func (c *ChatHandler) leave() error {
-	msg := fmt.Sprintf(" * user has left %s: %s", c.participant.Room(), c.name)
+	msg := chat.SystemMessage {
+		Message: fmt.Sprintf(" * user has left %s: %s", c.participant.Room(), c.name),
+		Subject: c.name,
+		HideIfYou: true,
+	}
 	c.participant.Send(msg)
 	err := c.participant.Leave()
 	c.participant = nil

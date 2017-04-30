@@ -28,10 +28,10 @@ type Chat interface {
 
 type Participant interface {
 	// Send a message as a participant
-	Send(message string) error
+	Send(message Message) error
 
 	// Subscribe messages on the chat room
-	Subscribe(ch chan string) error
+	Subscribe(ch chan Message) error
 
 	// Leave the chat room
 	Leave() error

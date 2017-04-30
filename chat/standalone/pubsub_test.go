@@ -1,14 +1,17 @@
 package standalone
 
 import (
+	"github.com/yuichi1004/telnet-chat/chat"
+
 	"fmt"
+	"reflect"
 	"sync"
 	"testing"
 )
 
 func TestPubSub_Subscribe(t *testing.T) {
 	type fields struct {
-		subs   map[int]chan string
+		subs   map[int]chan chat.Message
 		m      sync.Mutex
 		serial int
 	}
@@ -30,10 +33,10 @@ func TestPubSub_Subscribe(t *testing.T) {
 		{
 			name: "normal case",
 			fields: fields{
-				subs: make(map[int]chan string),
+				subs: make(map[int]chan chat.Message),
 			},
 			test: func(p *PubSub) error {
-				ch := make(chan string)
+				ch := make(chan chat.Message)
 				_, err := p.Subscribe(ch)
 				return err
 			},
@@ -45,12 +48,12 @@ func TestPubSub_Subscribe(t *testing.T) {
 		{
 			name: "normal case - closed",
 			fields: fields{
-				subs: make(map[int]chan string),
+				subs: make(map[int]chan chat.Message),
 			},
 			test: func(p *PubSub) error {
-				ch := make(chan string)
+				ch := make(chan chat.Message)
 				closer, err := p.Subscribe(ch)
-				ch2 := make(chan string)
+				ch2 := make(chan chat.Message)
 				_, err = p.Subscribe(ch2)
 				closer()
 				return err
@@ -81,17 +84,17 @@ func TestPubSub_Subscribe(t *testing.T) {
 }
 
 func TestPubSub_Publish(t *testing.T) {
-	subscribers := make(map[int]chan string)
-	subscribers[0] = make(chan string, 1)
-	subscribers[1] = make(chan string, 1)
+	subscribers := make(map[int]chan chat.Message)
+	subscribers[0] = make(chan chat.Message, 1)
+	subscribers[1] = make(chan chat.Message, 1)
 
 	type fields struct {
-		subs   map[int]chan string
+		subs   map[int]chan chat.Message
 		m      sync.Mutex
 		serial int
 	}
 	type args struct {
-		message string
+		message chat.Message 
 	}
 	tests := []struct {
 		name    string
@@ -106,18 +109,19 @@ func TestPubSub_Publish(t *testing.T) {
 				subs: subscribers,
 				serial: 2,
 			},
-			args: args{"hello"},
+			args: args{chat.TextMessage{"john", "hello"}},
 			check: func() error {
 				got := 0
+				expects := chat.TextMessage{"john", "hello"}
 				for i := 0; i < 2; i++ {
 					select {
 					case m1 := <- subscribers[0]:
-						if m1 != "hello" {
+						if !reflect.DeepEqual(m1, expects) {
 							return fmt.Errorf("unexpected message (expects: %s, got: %s)", "hello", m1)
 						}
 						got = got + 1
 					case m2 := <- subscribers[1]:
-						if m2 != "hello" {
+						if !reflect.DeepEqual(m2, expects) {
 							return fmt.Errorf("unexpected message (expects: %s, got: %s)", "hello", m2)
 						}
 						got = got + 1
