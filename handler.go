@@ -34,11 +34,11 @@ func NewChatHandler(chatInstance chat.Chat, writer io.ReadWriteCloser) *ChatHand
 }
 
 func (c *ChatHandler) doHandle() {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Printf("recover on doHandle()")
-		}
-	}()
+	//defer func() {
+	//	if r := recover(); r != nil {
+	//		fmt.Printf("recover on doHandle()")
+	//	}
+	//}()
 	defer c.writer.Close()
 
 	line := make(chan string)
