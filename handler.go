@@ -199,6 +199,9 @@ func (c *ChatHandler) disconnect() error {
 	if c.name != "" {
 		c.chat.Disconnect(c.name)
 	}
+	if c.participant != nil {
+		c.leave()
+	}
 	return nil
 }
 
